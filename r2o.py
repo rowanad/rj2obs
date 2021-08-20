@@ -131,6 +131,10 @@ def expand_children(block, uid2block, referenced_uids, level=0):
         lines.extend(expand_children(b, uid2block, referenced_uids, level + 1))
     return lines
 
+def filename_safe(name):
+    name = str(name)
+    name = re.sub(r'[^\w\s-]', '', name.lower())
+    return re.sub(r'[-\s]+', '-', name).strip('-_')
 
 j = json.load(open(sys.argv[1], mode="rt", encoding="utf-8", errors="ignore"))
 
@@ -177,16 +181,9 @@ for p in tqdm(pages):
     title = p["title"]
     if not title:
         continue
-    ofiln = f'{odir}/{p["title"]}.md'
+    ofiln = f'{odir}/{filename_safe(p["title"])}.md'
     if p["daily"]:
-        ofiln = f'{ddir}/{p["title"]}.md'
-
-    # hack for crazy slashes in titles
-    if "/" in title:
-        d = odir
-        for part in title.split("/")[:-1]:
-            d = os.path.join(d, part)
-            os.makedirs(d, exist_ok=True)
+        ofiln = f'{ddir}/{filename_safe(p["title"])}.md'
 
     lines = expand_children(p, uid2block, referenced_uids)
     try:
